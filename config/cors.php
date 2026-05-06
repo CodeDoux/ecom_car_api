@@ -19,7 +19,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:4200'],
+    'allowed_origins' => [
+        'https://ecom-car-mu.vercel.app',  // ← remplace par ton URL Vercel exacte
+    'http://localhost:4200',  
+    ],
 
     'allowed_origins_patterns' => [],
 
