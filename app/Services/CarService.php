@@ -7,6 +7,8 @@ use App\Models\Image;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 
 
 class CarService
@@ -54,7 +56,7 @@ class CarService
                 'status'       => $data['status']      ?? 'nouveau',
             ]);
                 // Sauvegarder les images
-                if (!empty($data['images']) && is_array($data['images'])) {
+                /*if (!empty($data['images']) && is_array($data['images'])) {
                     foreach ($data['images'] as $index => $imageFile) {
                         $path = $imageFile->store('cars', 'public');
 
@@ -64,6 +66,24 @@ class CarService
                             'dateCreation' => now(),
                             'altText' => $car->nom . " image " . ($index + 1),
                             'car_id'=>$car['id'],
+                        ]);
+                    }
+                }*/
+
+                    if (!empty($data['images']) && is_array($data['images'])) {
+                    foreach ($data['images'] as $index => $imageFile) {
+                        
+                        // Upload sur Cloudinary
+                        $result = Cloudinary::upload($imageFile->getRealPath(), [
+                            'folder' => 'abk-auto/cars'
+                        ]);
+
+                        $car->images()->create([
+                            'chemin'       => $result->getSecurePath(), // ← URL complète Cloudinary
+                            'is_primary'   => $index === 0,
+                            'dateCreation' => now(),
+                            'altText'      => $car->nom . " image " . ($index + 1),
+                            'car_id'       => $car['id'],
                         ]);
                     }
                 }
@@ -106,7 +126,7 @@ class CarService
             ]);
 
             // Ajouter de nouvelles images si présentes
-            if (!empty($data['images']) && is_array($data['images'])) {
+           /* if (!empty($data['images']) && is_array($data['images'])) {
                 foreach ($data['images'] as $index => $imageFile) {
 
                     if (!$imageFile->isValid()) {
@@ -124,6 +144,29 @@ class CarService
 
                     $car->images()->create([
                         'url'        => asset('storage/' . $path),
+                        'is_primary' => $isPrimary,
+                    ]);
+                }
+            }*/
+
+                // Ajouter de nouvelles images si présentes
+            if (!empty($data['images']) && is_array($data['images'])) {
+                foreach ($data['images'] as $index => $imageFile) {
+
+                    if (!$imageFile->isValid()) {
+                        throw new \Exception("Image invalide à l'index {$index}.");
+                    }
+
+                    // Upload sur Cloudinary
+                    $result = Cloudinary::upload($imageFile->getRealPath(), [
+                        'folder' => 'abk-auto/cars'
+                    ]);
+
+                    // Première image principale seulement si aucune n'existe
+                    $isPrimary = $index === 0 && $car->images()->where('is_primary', true)->doesntExist();
+
+                    $car->images()->create([
+                        'chemin'     => $result->getSecurePath(), // ← URL complète Cloudinary
                         'is_primary' => $isPrimary,
                     ]);
                 }
