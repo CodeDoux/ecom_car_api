@@ -80,7 +80,7 @@ class CarService
 
                         $car->images()->create([
                             'chemin'       => $result->getSecurePath(), // ← URL complète Cloudinary
-                            'is_primary'   => $index === 0,
+                            'isPrimary'   => $index === 0,
                             'dateCreation' => now(),
                             'altText'      => $car->nom . " image " . ($index + 1),
                             'car_id'       => $car['id'],
@@ -162,11 +162,11 @@ class CarService
                     ]);
 
                     // Première image principale seulement si aucune n'existe
-                    $isPrimary = $index === 0 && $car->images()->where('is_primary', true)->doesntExist();
+                    $isPrimary = $index === 0 && $car->images()->where('isPrimary', true)->doesntExist();
 
                     $car->images()->create([
                         'chemin'     => $result->getSecurePath(), // ← URL complète Cloudinary
-                        'is_primary' => $isPrimary,
+                        'isPrimary' => $isPrimary,
                     ]);
                 }
             }
@@ -234,8 +234,8 @@ class CarService
     public function setPrimaryImage(CarImage $image)
     {
         try {
-            CarImage::where('car_id', $image->car_id)->update(['is_primary' => false]);
-            $image->update(['is_primary' => true]);
+            CarImage::where('car_id', $image->car_id)->update(['isPrimary' => false]);
+            $image->update(['isPrimary' => true]);
             return $image;
         } catch (\Exception $e) {
             throw new \Exception('Erreur lors de la définition de l\'image principale : ' . $e->getMessage());
