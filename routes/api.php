@@ -18,6 +18,17 @@ use App\Http\Controllers\SettingController;
 // ================================================================
 // AUTH — public
 // ================================================================
+Route::get('test-cloudinary', function() {
+    try {
+        return response()->json([
+            'cloudinary_url' => env('CLOUDINARY_URL') ? 'défini ✅' : 'manquant ❌',
+            'cloud_name'     => config('cloudinary.cloud_url') ?? 'non configuré',
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()]);
+    }
+});
+
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login',    [AuthController::class, 'login']);
@@ -35,7 +46,7 @@ Route::get('settings', [SettingController::class, 'index']);
 // PROTÉGÉES — auth:sanctum
 // ================================================================
 Route::middleware('auth:sanctum')->group(function () {
-    
+
 
 Route::put('settings', [SettingController::class, 'update']);
     // ── Utilisateur connecté ──────────────────────────────────

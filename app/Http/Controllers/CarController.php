@@ -30,13 +30,22 @@ class CarController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(CarRequest $request)
-    {
-         $data           = $request->validated();
-         $data['images'] = $request->file('images') ?? [];
+{
+    try {
+        $data           = $request->validated();
+        $data['images'] = $request->file('images') ?? [];
 
-         $car = $this->carService->createCar($data);
-         return response()->json($car, 201);
+        $car = $this->carService->createCar($data);
+        return response()->json($car, 201);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => $e->getMessage(),
+            'line'    => $e->getLine(),
+            'file'    => $e->getFile(),
+        ], 500);
     }
+}
 
     
 
@@ -52,15 +61,25 @@ class CarController extends Controller
      * Update the specified resource in storage.
      */
     public function update(CarRequest $request, Car $car)
-    {
-         \Log::info('Request all:', $request->all());
-    \Log::info('Request validated:', $request->validated());
+{
+    try {
+        \Log::info('Request all:', $request->all());
+        \Log::info('Request validated:', $request->validated());
+
         $data           = $request->validated();
         $data['images'] = $request->file('images') ?? [];
 
         $car = $this->carService->updateCar($car, $data);
         return response()->json($car);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => $e->getMessage(),
+            'line'    => $e->getLine(),
+            'file'    => $e->getFile(),
+        ], 500);
     }
+}
 
     /**
      * Remove the specified resource from storage.
