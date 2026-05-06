@@ -90,7 +90,6 @@ class CarService
 
             DB::commit();
             return $car->load(['categorie', 'images']);
-            return $car;
 
         } catch (\Exception $e) {
            DB::rollBack();
@@ -187,10 +186,19 @@ class CarService
         DB::beginTransaction();
         try {
             // Supprimer les fichiers physiques
-            foreach ($car->images as $image) {
+           /* foreach ($car->images as $image) {
                 $path = str_replace(asset('storage/'), '', $image->url);
                 Storage::disk('public')->delete($path);
+            }*/
+
+                 foreach ($car->images as $image) {
+            if (str_contains($image->chemin, 'cloudinary.com')) {
+                $publicId = $this->extractPublicId($image->chemin);
+                Cloudinary::destroy($publicId);
+            } else {
+                Storage::disk('public')->delete($image->chemin);
             }
+        }
 
             $car->delete(); // cascade supprime les images en BDD
 
@@ -207,8 +215,14 @@ class CarService
     public function deleteImage(CarImage $image)
     {
         try {
-            $path = str_replace(asset('storage/'), '', $image->url);
-            Storage::disk('public')->delete($path);
+           /* $path = str_replace(asset('storage/'), '', $image->url);
+            Storage::disk('public')->delete($path);*/
+            if (str_contains($image->chemin, 'cloudinary.com')) {
+            $publicId = $this->extractPublicId($image->chemin);
+            Cloudinary::destroy($publicId);
+        } else {
+            Storage::disk('public')->delete($image->chemin);
+        }
             $image->delete();
             return true;
         } catch (\Exception $e) {
@@ -227,4 +241,12 @@ class CarService
             throw new \Exception('Erreur lors de la définition de l\'image principale : ' . $e->getMessage());
         }
     }
+
+    // ── EXTRACT PUBLIC ID ─────────────────────────────────
+private function extractPublicId(string $url): string
+{
+    $path = parse_url($url, PHP_URL_PATH);
+    preg_match('/\/image\/upload\/(?:v\d+\/)?(.+)\.\w+$/', $path, $matches);
+    return $matches[1] ?? '';
+}
 }
